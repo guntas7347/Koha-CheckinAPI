@@ -1,0 +1,82 @@
+{
+  "swagger": "2.0",
+  "paths": {
+    "/checkin": {
+      "post": {
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "operationId": "customCheckinGuntas",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["barcode", "branch"],
+              "properties": {
+                "barcode": {
+                  "type": "string"
+                },
+                "branch": {
+                  "type": "string"
+                },
+                "exemptfine": {
+                  "type": "integer"
+                },
+                "dropbox": {
+                  "type": "integer"
+                },
+                "returndate": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "string" },
+                "item": { "type": "string" },
+                "messages": { "type": "object" }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": { "type": "string" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": { "type": "string" },
+                "details": { "type": "string" }
+              }
+            }
+          }
+        },
+        "x-koha-authorization": {
+          "permissions": {
+            "circulate": "circulate_remaining_permissions"
+          }
+        },
+        "x-mojo-to": "Com::Guntas::CheckinAPI::Controller#custom_checkin"
+      }
+    }
+  },
+  "info": {
+    "title": "Guntas Checkin API",
+    "version": "1.0"
+  }
+}
