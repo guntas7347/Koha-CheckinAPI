@@ -9,57 +9,58 @@ use Try::Tiny;
 sub custom_checkin {
     my $c = shift;
 
-    # 1. Authenticate first
-    my $user = $c->authenticate;
-    return unless $user;
-
-    # 2. Validate OpenAPI input
+    # 1. Validate OpenAPI Input
+    # This automatically rejects bad JSON or missing required fields (like 'branch')
     my $v = $c->openapi->valid_input or return;
 
     my $barcode;
-
     return try {
-        my $body = $c->req->json;
-        $barcode = $body->{barcode};
+        my $body    = $c->req->json;
+        $barcode    = $body->{barcode};
+        my $branch  = $body->{branch};
         
-        my $branch     = $body->{branch};
+        # Optional fields with defaults
         my $exemptfine = $body->{exemptfine} // 0;
         my $dropbox    = $body->{dropbox}    // 0;
         my $returndate = $body->{returndate} ? dt_from_string($body->{returndate}) : undef;
 
-        my ($messages, $iteminformation, $borrower) = C4::Circulation::AddReturn(
-            $barcode, 
-            $branch, 
-            $exemptfine, 
-            $dropbox, 
-            $returndate
+        # 2. Proceed with AddReturn
+        # FIXED: Catching all 4 return values to prevent the "0 as HASH ref" crash
+        my ($doreturn, $messages, $iteminfo, $borrower) = C4::Circulation::AddReturn(
+            $barcode, $branch, $exemptfine, $dropbox, $returndate
         );
 
-        # Handle Bad Barcode
-        if ($messages->{BadBarcode}) {
+        # 3. Handle Logical Errors (e.g., Barcode doesn't exist in DB)
+        if ($messages && $messages->{BadBarcode}) {
             return $c->render(
                 status  => 400,
-                openapi => { error => "Invalid barcode: $barcode" }
+                openapi => {
+                    error      => "Invalid barcode: $barcode",
+                    error_code => "INVALID_BARCODE"
+                }
             );
         }
 
+        # 4. Success!
         return $c->render(
-            status  => 200, 
-            openapi => { 
-                status   => "success", 
-                item     => ($iteminformation && $iteminformation->{title}) ? $iteminformation->{title} : "Unknown",
-                messages => $messages // {}
+            status  => 200,
+            openapi => {
+                messages        => $messages // {},
+                iteminformation => $iteminfo // {},
+                borrower        => $borrower // {}
             }
         );
-    } 
-    catch {
-        my $err = $_;
 
+    } catch {
+        my $err = $_;
+        
+        
         return $c->render(
             status  => 500,
-            openapi => { 
-                error   => "Checkin failed for barcode: $barcode",
-                details => "$err" 
+            openapi => {
+                error      => "Internal Server Error",
+                error_code => "INTERNAL_ERROR",
+                details    => "$err"
             }
         );
     };

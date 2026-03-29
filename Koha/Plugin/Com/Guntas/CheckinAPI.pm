@@ -10,7 +10,7 @@ our $metadata = {
     date_updated    => '2026-03-29',
     minimum_version => '24.11.00.000',
     maximum_version => undef,
-    version         => '1.0',
+    version         => '1.2',
     description     => 'Checkin API for Koha'
 };
 

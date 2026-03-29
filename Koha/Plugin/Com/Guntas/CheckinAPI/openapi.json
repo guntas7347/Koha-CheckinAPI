@@ -38,31 +38,25 @@
           "200": {
             "description": "Success",
             "schema": {
-              "type": "object",
-              "properties": {
-                "status": { "type": "string" },
-                "item": { "type": "string" },
-                "messages": { "type": "object" }
-              }
+              "type": "object"
             }
           },
           "400": {
-            "description": "Error",
+            "description": "Bad Request",
             "schema": {
-              "type": "object",
-              "properties": {
-                "error": { "type": "string" }
-              }
+              "type": "object"
             }
           },
           "500": {
             "description": "Server Error",
             "schema": {
-              "type": "object",
-              "properties": {
-                "error": { "type": "string" },
-                "details": { "type": "string" }
-              }
+              "type": "object"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object"
             }
           }
         },
